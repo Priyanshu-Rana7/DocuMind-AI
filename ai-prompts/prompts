@@ -1,0 +1,460 @@
+1. You are a senior AI Software Engineer and Technical Architect.
+
+We are building a production-quality SaaS application called "AI Invoice Reader".
+
+This is NOT a college project.
+The final product should be good enough to demonstrate to international freelance clients and small businesses.
+
+## Goal
+
+Build an AI-powered invoice processing platform where users can upload invoices (PDF, PNG, JPG, JPEG).
+
+The system should:
+
+1. Extract text from invoices using OCR.
+2. Understand the invoice using an LLM.
+3. Extract structured information.
+4. Display the extracted information beautifully.
+5. Export extracted information to CSV and Excel.
+6. Prepare the architecture for future features like authentication, dashboards, analytics, AI chat, and multi-user support.
+
+-----------------------------------------
+
+## Tech Stack
+
+Frontend
+- React
+- Vite
+- TypeScript
+- Tailwind CSS
+- React Query
+- React Router
+
+Backend
+- FastAPI
+- Python 3.12+
+- SQLAlchemy
+- Alembic
+- PostgreSQL
+
+OCR
+- EasyOCR initially
+- Keep OCR provider modular so Tesseract or cloud OCR can be added later.
+
+AI
+- Provider abstraction.
+- Initially support OpenRouter-compatible APIs.
+- Never hardcode model names.
+- Read model and API keys from environment variables.
+
+Storage
+- Local uploads initially.
+- Keep abstraction ready for S3 later.
+
+Deployment
+- Docker
+- docker-compose
+- Environment variable configuration
+
+-----------------------------------------
+
+## Folder Structure
+
+Create a scalable folder structure.
+
+backend/
+    app/
+        api/
+        core/
+        models/
+        schemas/
+        services/
+        repositories/
+        utils/
+        db/
+        workers/
+
+frontend/
+    src/
+        components/
+        pages/
+        hooks/
+        api/
+        layouts/
+        types/
+        utils/
+
+-----------------------------------------
+
+## Backend Requirements
+
+Implement
+
+- clean architecture
+- dependency injection where useful
+- modular routers
+- centralized config
+- logging
+- exception handlers
+- request validation
+- response validation
+
+Provide endpoints
+
+POST /upload
+
+POST /extract
+
+GET /invoice/{id}
+
+GET /health
+
+-----------------------------------------
+
+## OCR Pipeline
+
+After upload
+
+Extract raw text.
+
+Return
+
+confidence
+pages
+detected language
+
+-----------------------------------------
+
+## AI Pipeline
+
+Send OCR output to LLM.
+
+Return structured JSON
+
+Invoice Number
+
+Vendor Name
+
+Vendor Address
+
+Customer Name
+
+Invoice Date
+
+Due Date
+
+Currency
+
+Subtotal
+
+Tax
+
+Discount
+
+Total
+
+Payment Terms
+
+Invoice Items
+
+Each line item
+
+description
+
+quantity
+
+unit price
+
+total
+
+Also return confidence score.
+
+-----------------------------------------
+
+## Frontend
+
+Modern SaaS dashboard.
+
+Pages
+
+Landing
+
+Upload
+
+Invoice Viewer
+
+History
+
+Settings
+
+Responsive.
+
+Professional UI.
+
+Drag & Drop upload.
+
+Loading animations.
+
+Toast notifications.
+
+Dark mode.
+
+-----------------------------------------
+
+## Export
+
+CSV
+
+Excel
+
+JSON
+
+-----------------------------------------
+
+## Coding Rules
+
+Always write production-quality code.
+
+Use typing everywhere.
+
+Document public functions.
+
+Follow SOLID principles.
+
+Avoid code duplication.
+
+Never generate placeholder code if a proper implementation is possible.
+
+If a feature depends on another feature, implement them in logical order.
+
+-----------------------------------------
+
+## Development Strategy
+
+Build incrementally.
+
+At the end of every milestone:
+
+1. Explain what was built.
+
+2. Explain why it was designed that way.
+
+3. Suggest improvements.
+
+4. Wait before continuing.
+
+Never jump ahead.
+
+Act like the lead engineer of this product.
+
+The codebase should eventually be scalable enough for authentication, payment integration, AI agents, analytics, and enterprise deployments.
+
+
+
+2. Excellent work on Milestone 1. Before implementing Milestone 2, I want to improve the architecture so this project follows production-grade software engineering practices and remains scalable for future enterprise features.
+
+Please perform an architectural refinement before writing any new business logic.
+
+## 1. Testing Infrastructure
+
+Introduce a dedicated tests/ directory with a scalable layout.
+
+Example:
+
+tests/
+    api/
+    services/
+    repositories/
+    ocr/
+    llm/
+    fixtures/
+    conftest.py
+
+Configure pytest so the project is test-ready from the beginning.
+
+Do not fully implement all tests yet, but prepare the structure and include representative examples where appropriate.
+
+---
+
+## 2. File Validation Layer
+
+Create a validators/ module responsible for validating uploaded files before processing.
+
+Example:
+
+validators/
+    file_validator.py
+
+Validation should include:
+
+- Allowed MIME types
+- Allowed file extensions
+- Maximum upload size
+- Empty files
+- Corrupted PDFs
+- Invalid images
+- Safe filename generation
+
+The upload endpoint should use this validation layer rather than embedding validation directly inside the API route.
+
+---
+
+## 3. Prompt Management
+
+Do not hardcode LLM prompts inside Python code.
+
+Create a prompts/ directory.
+
+Example:
+
+backend/
+    prompts/
+        invoice_extraction_v1.txt
+
+The LLM provider should dynamically load prompt templates from this directory.
+
+Design the prompt loading mechanism so future prompt versions (v2, v3, etc.) can be introduced without changing application logic.
+
+---
+
+## 4. Structured Logging
+
+Implement centralized structured logging.
+
+Create a logging strategy capable of recording:
+
+- Request ID
+- Processing duration
+- OCR execution time
+- LLM execution time
+- Upload filename
+- Errors
+- Warnings
+
+Logging should be reusable throughout the application.
+
+Avoid print statements.
+
+---
+
+## 5. Authentication-Ready Architecture
+
+Authentication is NOT required for the MVP.
+
+However, prepare the architecture for future authentication.
+
+Add folders such as:
+
+auth/
+users/
+
+Include placeholder modules, interfaces, or documentation where appropriate so JWT authentication and user management can later be integrated without restructuring the project.
+
+---
+
+## 6. Configuration Improvements
+
+Review configuration management.
+
+Ensure every configurable value is loaded from environment variables.
+
+Examples:
+
+Database URL
+OpenRouter API Key
+Model Name
+Upload Directory
+Maximum Upload Size
+Allowed File Types
+Logging Level
+
+No secrets should ever be hardcoded.
+
+---
+
+## 7. Dependency Injection
+
+Review all services.
+
+Where appropriate, inject dependencies instead of instantiating providers directly.
+
+Storage providers, OCR providers, repositories, and LLM providers should remain loosely coupled.
+
+---
+
+## 8. Documentation
+
+After making these architectural improvements:
+
+- Update the Implementation Plan if necessary.
+- Explain every architectural change.
+- Explain why each improvement increases scalability and maintainability.
+- Clearly identify any trade-offs introduced.
+
+Do not begin implementing Milestone 2 until these architectural refinements are complete and reviewed.
+
+
+
+3. Throughout the remainder of this project, behave as the lead software architect rather than a code generator.
+
+Before implementing any major feature:
+
+1. Briefly explain the design decision.
+2. Identify potential scalability concerns.
+3. Choose the most maintainable implementation.
+4. Avoid shortcuts that would create technical debt.
+5. Prefer production-quality code over the shortest possible implementation.
+
+If there are multiple valid approaches, explain why the selected approach is the most appropriate for a SaaS application expected to grow into a commercial product.
+
+
+4. Excellent. The architectural foundation is now strong.
+
+Proceed with Milestone 2.
+
+While implementing it, follow these engineering principles:
+
+1. Keep every provider modular and easily replaceable.
+2. Write clean, typed, well-documented code.
+3. Maintain separation of concerns between API, services, repositories, OCR providers, LLM providers, and validators.
+4. Add meaningful error handling with clear API responses.
+5. Include representative unit tests for every new service and endpoint.
+6. Record OCR execution time, LLM execution time, and total processing duration in structured logs.
+7. Ensure all endpoints return consistent response schemas.
+8. Keep database operations transactional where appropriate.
+9. Avoid blocking operations where practical and identify any parts that should later move to background workers.
+10. After each major feature, explain the implementation, trade-offs, and any recommendations before continuing.
+
+Do not sacrifice maintainability for speed.
+Treat every implementation as production code intended for a commercial SaaS product.
+
+
+
+
+
+5. Proceed with Milestone 3.
+
+The frontend should resemble a polished commercial SaaS product rather than a student dashboard.
+
+Design principles:
+
+- Modern, minimal, premium aesthetic.
+- Smooth animations that enhance usability without feeling distracting.
+- Fully responsive for desktop, tablet, and mobile.
+- Excellent accessibility (keyboard navigation, focus states, sufficient color contrast).
+- Consistent spacing, typography, and component design.
+- Reusable UI components instead of page-specific implementations.
+- Professional loading, empty, success, and error states.
+- Clear validation and actionable error messages.
+- Dark mode and light mode support from the start.
+- Consistent API response handling using centralized hooks/services.
+- Use skeleton loaders where appropriate instead of blank screens.
+- Organize components for future expansion into a multi-module document intelligence platform.
+
+While implementing each page, explain:
+1. Why the layout was chosen.
+2. How the components are reusable.
+3. How the design supports future modules beyond invoice processing.
+
+Do not prioritize visual effects over usability.
+Prioritize a clean, trustworthy SaaS experience suitable for business users.
