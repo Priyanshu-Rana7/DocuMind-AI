@@ -9,7 +9,7 @@ export const INVOICE_KEYS = {
 };
 
 /** Fetch paginated invoice list */
-export const useInvoices = (params?: { skip?: number; limit?: number; status?: string }) => {
+export const useInvoices = (params?: { skip?: number; limit?: number; status?: string; search?: string }) => {
   return useQuery({
     queryKey: INVOICE_KEYS.list(params),
     queryFn: () => invoiceApi.getInvoices(params),
@@ -45,6 +45,42 @@ export const useExtractInvoice = () => {
     mutationFn: (invoiceId: string) => invoiceApi.extractInvoice(invoiceId),
     onSuccess: (data: Invoice) => {
       qc.setQueryData(INVOICE_KEYS.detail(data.id), data);
+      qc.invalidateQueries({ queryKey: INVOICE_KEYS.all });
+    },
+  });
+};
+
+/** Retry OCR and structured extraction for a failed invoice */
+export const useRetryInvoice = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (invoiceId: string) => invoiceApi.retryInvoice(invoiceId),
+    onSuccess: (data: Invoice) => {
+      qc.setQueryData(INVOICE_KEYS.detail(data.id), data);
+      qc.invalidateQueries({ queryKey: INVOICE_KEYS.all });
+    },
+  });
+};
+
+/** Save user corrections to extracted invoice data */
+export const useCorrectInvoice = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ invoiceId, extractedData }: { invoiceId: string; extractedData: Invoice['extracted_data'] }) =>
+      invoiceApi.correctInvoice(invoiceId, extractedData!),
+    onSuccess: (data: Invoice) => {
+      qc.setQueryData(INVOICE_KEYS.detail(data.id), data);
+      qc.invalidateQueries({ queryKey: INVOICE_KEYS.all });
+    },
+  });
+};
+
+/** Permanently delete an invoice and its stored source file */
+export const useDeleteInvoice = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (invoiceId: string) => invoiceApi.deleteInvoice(invoiceId),
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: INVOICE_KEYS.all });
     },
   });

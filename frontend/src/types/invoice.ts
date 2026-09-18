@@ -22,6 +22,7 @@ export interface ExtractedInvoiceData {
   payment_terms?: string;
   invoice_items: InvoiceItem[];
   confidence_score: number;
+  validation_warnings?: string[];
 }
 
 export interface OCRMetadata {
@@ -53,7 +54,12 @@ export interface HealthStatus {
   version: string;
   environment: string;
   database: string;
+  migration: string;
   ocr_provider: string;
+  ocr_configured: boolean;
+  poppler_configured: boolean;
   llm_provider: string;
+  llm_model: string;
+  llm_configured: boolean;
   storage_provider: string;
 }

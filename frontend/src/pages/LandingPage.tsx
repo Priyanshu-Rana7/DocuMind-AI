@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileText, Clock, CheckCircle2, AlertCircle, ArrowRight, TrendingUp, Zap, Shield } from 'lucide-react';
 import { useInvoices } from '@/hooks/useInvoices';

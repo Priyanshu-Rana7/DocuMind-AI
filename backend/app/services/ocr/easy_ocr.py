@@ -5,7 +5,7 @@ from PIL import Image
 from app.services.ocr.base import BaseOCRProvider
 from app.schemas.ocr import OCRResult, OCRPageResult
 from app.core.config import settings
-from app.core.exceptions import OCRExtractionError
+from app.core.exceptions import OCRConfigurationError, OCRExtractionError
 from app.core.logging import logger
 
 # EasyOCR reader instance singleton cache
@@ -25,7 +25,7 @@ def get_easyocr_reader():
                 verbose=False,
             )
         except ImportError as e:
-            logger.warning(f"EasyOCR or PyTorch is not installed ({str(e)}). EasyOCRProvider will operate in fallback mode.")
+            logger.error(f"EasyOCR or PyTorch is not installed: {str(e)}")
             return None
     return _reader_instance
 
@@ -44,7 +44,7 @@ class EasyOCRProvider(BaseOCRProvider):
                 None, self._sync_extract, file_path, mime_type
             )
             return result
-        except OCRExtractionError:
+        except (OCRConfigurationError, OCRExtractionError):
             raise
         except Exception as e:
             logger.error(f"EasyOCR extraction error on file '{file_path}': {str(e)}", exc_info=True)
@@ -53,10 +53,10 @@ class EasyOCRProvider(BaseOCRProvider):
     def _sync_extract(self, file_path: str, mime_type: str) -> OCRResult:
         reader = get_easyocr_reader()
         if reader is None:
-            from app.services.ocr.mock_ocr import MockOCRProvider
-            import asyncio
-            mock_ocr = MockOCRProvider()
-            return asyncio.run(mock_ocr.extract_text(file_path, mime_type))
+            raise OCRConfigurationError(
+                "EasyOCR is unavailable. Install EasyOCR and PyTorch, "
+                "or explicitly configure OCR_PROVIDER=mock for development."
+            )
         page_results: List[OCRPageResult] = []
         all_text_blocks: List[str] = []
         confidences: List[float] = []
@@ -65,26 +65,47 @@ class EasyOCRProvider(BaseOCRProvider):
             # Convert PDF pages to PIL Images
             try:
                 from pdf2image import convert_from_path
-                images = convert_from_path(file_path)
-            except Exception as e:
-                logger.warning(f"pdf2image conversion failed for '{file_path}' (poppler missing?): {str(e)}. Falling back to mock text.")
-                raise OCRExtractionError(f"PDF page conversion failed: {str(e)}. Ensure poppler is installed.")
-            
-            for page_num, img in enumerate(images, start=1):
-                page_text, page_conf = self._process_image(reader, img)
-                page_results.append(
-                    OCRPageResult(
-                        page_number=page_num,
-                        text=page_text,
-                        confidence=page_conf,
-                    )
+                images = convert_from_path(
+                    file_path,
+                    poppler_path=settings.POPPLER_PATH or None,
+                    last_page=settings.MAX_DOCUMENT_PAGES + 1,
                 )
-                all_text_blocks.append(page_text)
-                confidences.append(page_conf)
+            except Exception as e:
+                raise OCRExtractionError(
+                    f"PDF page conversion failed: {str(e)}. "
+                    "Install Poppler and add its bin directory to PATH, "
+                    "or set POPPLER_PATH in the backend .env file."
+                )
+            if not images:
+                raise OCRExtractionError(
+                    f"PDF contains no readable pages: '{file_path}'."
+                )
+            if len(images) > settings.MAX_DOCUMENT_PAGES:
+                for image in images:
+                    image.close()
+                raise OCRExtractionError(
+                    f"PDF exceeds the maximum supported length of "
+                    f"{settings.MAX_DOCUMENT_PAGES} pages."
+                )
+
+            for page_num, img in enumerate(images, start=1):
+                try:
+                    page_text, page_conf = self._process_image(reader, img)
+                    page_results.append(
+                        OCRPageResult(
+                            page_number=page_num,
+                            text=page_text,
+                            confidence=page_conf,
+                        )
+                    )
+                    all_text_blocks.append(page_text)
+                    confidences.append(page_conf)
+                finally:
+                    img.close()
         else:
             # Single image file (PNG, JPG, JPEG)
-            img = Image.open(file_path)
-            page_text, page_conf = self._process_image(reader, img)
+            with Image.open(file_path) as img:
+                page_text, page_conf = self._process_image(reader, img)
             page_results.append(
                 OCRPageResult(
                     page_number=1,
@@ -96,6 +117,10 @@ class EasyOCRProvider(BaseOCRProvider):
             confidences.append(page_conf)
 
         combined_text = "\n\n--- Page Break ---\n\n".join(all_text_blocks)
+        if not combined_text.strip():
+            raise OCRExtractionError(
+                f"No readable text was detected in '{file_path}'."
+            )
         avg_confidence = round(sum(confidences) / len(confidences), 4) if confidences else 0.0
 
         return OCRResult(

@@ -9,6 +9,8 @@ from app.services.storage.base import BaseStorageProvider
 from app.services.ocr.base import BaseOCRProvider
 from app.services.llm.base import BaseLLMProvider
 from app.services.invoice_service import InvoiceService
+from app.services.processors.base import BaseDocumentProcessor
+from app.services.processors.invoice_processor import InvoiceDocumentProcessor
 
 
 def get_storage_provider() -> BaseStorageProvider:
@@ -23,16 +25,8 @@ def get_storage_provider() -> BaseStorageProvider:
 def get_ocr_provider() -> BaseOCRProvider:
     """Factory dependency injecting configured OCR Provider."""
     if settings.OCR_PROVIDER == "easyocr":
-        try:
-            from app.services.ocr.easy_ocr import EasyOCRProvider
-            return EasyOCRProvider()
-        except (ImportError, Exception) as e:
-            from app.services.ocr.mock_ocr import MockOCRProvider
-            from app.core.logging import logger
-            logger.warning(
-                f"EasyOCR import/init failed ({str(e)}). Using MockOCRProvider fallback."
-            )
-            return MockOCRProvider()
+        from app.services.ocr.easy_ocr import EasyOCRProvider
+        return EasyOCRProvider()
     elif settings.OCR_PROVIDER == "mock":
         from app.services.ocr.mock_ocr import MockOCRProvider
         return MockOCRProvider()
@@ -52,6 +46,13 @@ def get_llm_provider() -> BaseLLMProvider:
         raise NotImplementedError(f"LLM provider '{settings.LLM_PROVIDER}' is not implemented.")
 
 
+def get_invoice_processor(
+    llm: BaseLLMProvider = Depends(get_llm_provider),
+) -> BaseDocumentProcessor:
+    """Injects the processor for the currently supported invoice document type."""
+    return InvoiceDocumentProcessor(llm)
+
+
 def get_invoice_repository(db: Session = Depends(get_db)) -> InvoiceRepository:
     """Injects InvoiceRepository with DB session."""
     return InvoiceRepository(db)
@@ -62,6 +63,7 @@ def get_invoice_service(
     storage: BaseStorageProvider = Depends(get_storage_provider),
     ocr: BaseOCRProvider = Depends(get_ocr_provider),
     llm: BaseLLMProvider = Depends(get_llm_provider),
+    document_processor: BaseDocumentProcessor = Depends(get_invoice_processor),
 ) -> InvoiceService:
     """Injects InvoiceService with all dependencies."""
     return InvoiceService(
@@ -69,4 +71,5 @@ def get_invoice_service(
         storage_provider=storage,
         ocr_provider=ocr,
         llm_provider=llm,
+        document_processor=document_processor,
     )

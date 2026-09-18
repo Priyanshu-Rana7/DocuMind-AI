@@ -1,0 +1,32 @@
+{
+  "filename": "acme_subscription_invoice.pdf",
+  "ocr_text": "INVOICE\nAcme Cloud Tech Inc.\nInvoice #: INV-2026-0892\nDate: 2026-07-15\nDue Date: 2026-08-15\nCustomer: Global Enterprises LLC\n1 Enterprise Cloud Subscription | Qty 1 | Unit Price 1200.00 | Amount 1200.00\n2 Premium Support Addon | Qty 2 | Unit Price 150.00 | Amount 300.00\nSubtotal: 1500.00\nTax: 120.00\nTotal Amount Due: 1620.00\nPayment Terms: Net 30",
+  "expected": {
+    "invoice_number": "INV-2026-0892",
+    "vendor_name": "Acme Cloud Tech Inc.",
+    "customer_name": "Global Enterprises LLC",
+    "invoice_date": "2026-07-15",
+    "due_date": "2026-08-15",
+    "currency": "USD",
+    "subtotal": 1500.0,
+    "tax": 120.0,
+    "discount": 0.0,
+    "total": 1620.0,
+    "payment_terms": "Net 30",
+    "invoice_items": [
+      {
+        "description": "Enterprise Cloud Subscription",
+        "quantity": 1.0,
+        "unit_price": 1200.0,
+        "total": 1200.0
+      },
+      {
+        "description": "Premium Support Addon",
+        "quantity": 2.0,
+        "unit_price": 150.0,
+        "total": 300.0
+      }
+    ],
+    "confidence_score": 0.96
+  }
+}

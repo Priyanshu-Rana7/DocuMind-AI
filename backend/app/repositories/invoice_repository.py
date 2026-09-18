@@ -1,6 +1,6 @@
 from typing import List, Optional, Tuple, Dict, Any
 from sqlalchemy.orm import Session
-from sqlalchemy import select, func
+from sqlalchemy import select, func, or_, cast, String
 from app.models.invoice import Invoice, InvoiceStatus
 from app.core.exceptions import InvoiceNotFoundError
 from app.core.logging import logger
@@ -46,11 +46,21 @@ class InvoiceRepository:
         skip: int = 0,
         limit: int = 50,
         status: Optional[InvoiceStatus] = None,
+        search: Optional[str] = None,
     ) -> Tuple[List[Invoice], int]:
         """Returns paginated list of invoices and total count."""
         query = self.db.query(Invoice)
         if status:
             query = query.filter(Invoice.status == status)
+        if search and search.strip():
+            term = f"%{search.strip()}%"
+            query = query.filter(
+                or_(
+                    Invoice.filename.ilike(term),
+                    Invoice.raw_ocr_text.ilike(term),
+                    cast(Invoice.extracted_data, String).ilike(term),
+                )
+            )
 
         total = query.count()
         items = query.order_by(Invoice.created_at.desc()).offset(skip).limit(limit).all()
@@ -90,6 +100,19 @@ class InvoiceRepository:
         logger.debug(f"Updated extracted data for invoice ID: {invoice.id}")
         return invoice
 
+    def update_corrected_data(
+        self,
+        invoice_id: str,
+        extracted_data: Dict[str, Any],
+    ) -> Invoice:
+        """Persists user-corrected structured invoice data."""
+        invoice = self.get_by_id(invoice_id)
+        invoice.extracted_data = extracted_data
+        self.db.commit()
+        self.db.refresh(invoice)
+        logger.debug(f"Updated corrected data for invoice ID: {invoice.id}")
+        return invoice
+
     def mark_failed(self, invoice_id: str, error_message: str) -> Invoice:
         """Marks invoice status as FAILED with descriptive error message."""
         invoice = self.get_by_id(invoice_id)
@@ -99,3 +122,10 @@ class InvoiceRepository:
         self.db.refresh(invoice)
         logger.warning(f"Marked invoice ID {invoice_id} as FAILED: {error_message}")
         return invoice
+
+    def delete(self, invoice_id: str) -> None:
+        """Deletes an invoice record after its stored file has been removed."""
+        invoice = self.get_by_id(invoice_id)
+        self.db.delete(invoice)
+        self.db.commit()
+        logger.info(f"Deleted invoice record ID: {invoice_id}")

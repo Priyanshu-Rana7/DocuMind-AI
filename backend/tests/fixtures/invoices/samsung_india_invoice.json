@@ -1,0 +1,25 @@
+{
+  "filename": "samsung_india_invoice.pdf",
+  "ocr_text": "TAX INVOICE\nSAMSUNG INDIA ELECTRONICS PVT LTD\nInvoice No: 335016033053\nInvoice Date: 2026-08-12\nBill To: Demo Electronics Store\nCurrency: INR\n1 Galaxy Display Unit | Qty 1 | Unit Price 12411.89 | Amount 12411.89\nSubtotal: 12411.89\nGST: 2234.14\nInvoice Total: 14646.03\nPayment Terms: Due on receipt",
+  "expected": {
+    "invoice_number": "335016033053",
+    "vendor_name": "SAMSUNG INDIA ELECTRONICS PVT LTD",
+    "customer_name": "Demo Electronics Store",
+    "invoice_date": "2026-08-12",
+    "currency": "INR",
+    "subtotal": 12411.89,
+    "tax": 2234.14,
+    "discount": 0.0,
+    "total": 14646.03,
+    "payment_terms": "Due on receipt",
+    "invoice_items": [
+      {
+        "description": "Galaxy Display Unit",
+        "quantity": 1.0,
+        "unit_price": 12411.89,
+        "total": 12411.89
+      }
+    ],
+    "confidence_score": 0.95
+  }
+}

@@ -27,6 +27,10 @@ class ExtractedInvoiceData(BaseModel):
     payment_terms: Optional[str] = Field(default=None, description="Payment terms e.g. Net 30, Due on receipt")
     invoice_items: List[InvoiceItemSchema] = Field(default_factory=list, description="Array of line items")
     confidence_score: float = Field(default=0.9, description="LLM confidence rating from 0.0 to 1.0")
+    validation_warnings: List[str] = Field(
+        default_factory=list,
+        description="Warnings raised when extracted amounts do not reconcile.",
+    )
 
 
 class UploadResponseSchema(BaseModel):
