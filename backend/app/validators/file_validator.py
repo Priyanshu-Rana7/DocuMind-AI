@@ -1,7 +1,7 @@
 import os
 import re
 import uuid
-from typing import BinaryIO, Tuple
+from typing import Optional, Tuple
 from fastapi import UploadFile
 from app.core.config import settings
 from app.core.exceptions import InvalidFileTypeError, FileTooLargeError
