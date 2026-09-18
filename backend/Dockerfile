@@ -42,12 +42,16 @@ COPY ./app ./app
 COPY ./alembic.ini ./alembic.ini
 COPY ./alembic ./alembic
 
-# Writable directory for uploaded files (bind-mounted in prod)
-RUN mkdir -p /app/uploads && chmod 777 /app/uploads
-
 # Non-root user for security
 RUN useradd --system --no-create-home --uid 1001 appuser
+
+# Writable directories for uploads and EasyOCR model downloads.
+RUN mkdir -p /app/uploads /app/easyocr-models && \
+    chown -R appuser:appuser /app/uploads /app/easyocr-models
+
 USER appuser
+
+ENV OCR_MODEL_DIR=/app/easyocr-models
 
 EXPOSE 8000
 
