@@ -25,9 +25,6 @@ def upgrade() -> None:
         "FAILED",
         name="invoicestatus",
     )
-    bind = op.get_bind()
-    if bind.dialect.name == "postgresql":
-        invoice_status.create(bind, checkfirst=True)
 
     op.create_table(
         "invoices",
