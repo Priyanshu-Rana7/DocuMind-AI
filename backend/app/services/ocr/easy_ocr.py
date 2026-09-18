@@ -19,11 +19,13 @@ def get_easyocr_reader():
         try:
             import easyocr
             logger.info(f"Initializing EasyOCR reader (languages={settings.OCR_LANGUAGES}, gpu={settings.OCR_USE_GPU})...")
-            _reader_instance = easyocr.Reader(
-                settings.OCR_LANGUAGES,
-                gpu=settings.OCR_USE_GPU,
-                verbose=False,
-            )
+            reader_options = {
+                "gpu": settings.OCR_USE_GPU,
+                "verbose": False,
+            }
+            if settings.OCR_MODEL_DIR:
+                reader_options["model_storage_directory"] = settings.OCR_MODEL_DIR
+            _reader_instance = easyocr.Reader(settings.OCR_LANGUAGES, **reader_options)
         except ImportError as e:
             logger.error(f"EasyOCR or PyTorch is not installed: {str(e)}")
             return None

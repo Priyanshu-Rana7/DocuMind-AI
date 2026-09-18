@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     OCR_PROVIDER: str = "easyocr"  # easyocr | tesseract | mock
     OCR_LANGUAGES: List[str] = ["en"]
     OCR_USE_GPU: bool = False
+    OCR_MODEL_DIR: Optional[str] = None
     POPPLER_PATH: Optional[str] = None
     
     # AI / LLM Settings
