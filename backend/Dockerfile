@@ -45,13 +45,16 @@ COPY ./alembic ./alembic
 # Non-root user for security
 RUN useradd --system --no-create-home --uid 1001 appuser
 
-# Writable directories for uploads and EasyOCR model downloads.
-RUN mkdir -p /app/uploads /app/easyocr-models && \
-    chown -R appuser:appuser /app/uploads /app/easyocr-models
+# Writable directories for uploads, EasyOCR models, and framework caches.
+RUN mkdir -p /app/uploads /app/easyocr-models /app/user-home/.cache && \
+    chown -R appuser:appuser /app/uploads /app/easyocr-models /app/user-home
 
 USER appuser
 
-ENV OCR_MODEL_DIR=/app/easyocr-models
+ENV HOME=/app/user-home \
+    XDG_CACHE_HOME=/app/user-home/.cache \
+    TORCH_HOME=/app/easyocr-models \
+    OCR_MODEL_DIR=/app/easyocr-models
 
 EXPOSE 8000
 
