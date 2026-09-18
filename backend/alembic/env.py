@@ -7,7 +7,10 @@ from app.core.config import settings
 from app.db.base import Base
 
 config = context.config
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+# Alembic stores this value through ConfigParser, where percent signs are
+# interpolation markers. Database URLs contain percent-encoded credentials
+# such as "%40" for "@", so escape them only at this configuration boundary.
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL.replace("%", "%%"))
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
