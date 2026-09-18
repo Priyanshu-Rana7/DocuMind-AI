@@ -24,6 +24,10 @@ ENV/
 .env
 .env.*
 !.env.example
+.vercel/
+*.pem
+*.key
+*.crt
 
 # ===========================
 # Python Build

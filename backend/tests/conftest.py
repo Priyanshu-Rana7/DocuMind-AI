@@ -9,6 +9,7 @@ from sqlalchemy.pool import StaticPool
 from app.main import app
 from app.db.session import Base, get_db
 from app.core.config import settings
+from app.core.guardrails import rate_limiter
 
 # In-memory SQLite engine for fast, isolated test execution
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
@@ -36,6 +37,9 @@ def db_session() -> Generator[Session, None, None]:
 @pytest.fixture(scope="function")
 def client(db_session: Session) -> Generator[TestClient, None, None]:
     """FastAPI TestClient with overridden database session dependency."""
+    rate_limiter.reset()
+    existing_overrides = app.dependency_overrides.copy()
+
     def _override_get_db():
         try:
             yield db_session
@@ -46,6 +50,7 @@ def client(db_session: Session) -> Generator[TestClient, None, None]:
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
+    app.dependency_overrides.update(existing_overrides)
 
 
 @pytest.fixture

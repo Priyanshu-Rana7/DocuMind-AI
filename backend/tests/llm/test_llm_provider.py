@@ -1,5 +1,12 @@
 import pytest
 from app.schemas.invoice import ExtractedInvoiceData, InvoiceItemSchema
+from app.services.llm.openrouter import OpenRouterLLMProvider
+from app.core.exceptions import (
+    AIResponseError,
+    LLMConfigurationError,
+    LLMRateLimitError,
+    LLMTimeoutError,
+)
 
 
 def test_extracted_invoice_schema_validation():
@@ -16,3 +23,51 @@ def test_extracted_invoice_schema_validation():
     assert data.invoice_number == "INV-2026-001"
     assert len(data.invoice_items) == 1
     assert data.total == 1250.00
+
+
+@pytest.mark.asyncio
+async def test_openrouter_does_not_fallback_to_mock_without_api_key(monkeypatch):
+    monkeypatch.setattr("app.services.llm.openrouter.settings.OPENROUTER_API_KEY", "")
+    provider = OpenRouterLLMProvider()
+
+    with pytest.raises(LLMConfigurationError, match="OPENROUTER_API_KEY"):
+        await provider.extract_structured_invoice("Invoice total: 100")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("exception_name", "expected"),
+    [
+        ("RateLimitError", LLMRateLimitError),
+        ("APITimeoutError", LLMTimeoutError),
+    ],
+)
+async def test_openrouter_classifies_provider_failures(monkeypatch, exception_name, expected):
+    provider = OpenRouterLLMProvider.__new__(OpenRouterLLMProvider)
+    provider.client = type(
+        "Client",
+        (),
+        {
+            "chat": type(
+                "Chat",
+                (),
+                {
+                    "completions": type(
+                        "Completions",
+                        (),
+                        {
+                            "create": staticmethod(
+                                lambda **kwargs: (_ for _ in ()).throw(
+                                    type(exception_name, (Exception,), {})()
+                                )
+                            )
+                        },
+                    )()
+                },
+            )()
+        },
+    )()
+    provider.model_name = "test-model"
+
+    with pytest.raises(expected):
+        await provider.extract_structured_invoice("Invoice total: 100")

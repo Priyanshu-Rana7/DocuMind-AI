@@ -1,5 +1,5 @@
 import React from 'react';
-import { Cpu, Database, Palette, Code2, ChevronRight, ExternalLink } from 'lucide-react';
+import { Cpu, Database, Palette, Code2, ChevronRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { invoiceApi } from '@/api/invoiceApi';
 import { Badge } from '@/components/common/Badge';
@@ -79,6 +79,12 @@ export const SettingsPage: React.FC = () => {
           <>
             <SettingRow label="API Status"   value={health.status}      badge={health.status === 'ok' ? 'Healthy' : 'Degraded'} />
             <SettingRow label="Database"     value={health.database}    description="Connection pool status" />
+            <SettingRow
+              label="Database Schema"
+              value={health.migration}
+              description="Alembic migration revision applied to the active database"
+              badge={health.migration !== 'not_initialized' ? 'Migrated' : 'Needs migration'}
+            />
             <SettingRow label="Environment"  value={health.environment} />
             <SettingRow label="Version"      value={health.version} />
           </>
@@ -105,8 +111,14 @@ export const SettingsPage: React.FC = () => {
               description="LLM backend used for structured invoice parsing"
             />
             <SettingRow
+              label="Configuration"
+              value={health?.llm_configured ? 'Ready' : 'Not configured'}
+              description="API credentials are checked on the backend and never exposed here"
+              badge={health?.llm_configured ? 'Ready' : 'Action needed'}
+            />
+            <SettingRow
               label="Model"
-              value="OPENROUTER_MODEL"
+              value={health?.llm_model ?? '—'}
               description="Set via OPENROUTER_MODEL environment variable"
             />
           </>
@@ -122,11 +134,24 @@ export const SettingsPage: React.FC = () => {
         {isLoading ? (
           <div className="py-3"><Skeleton height="28px" /></div>
         ) : (
-          <SettingRow
-            label="Provider"
-            value={health?.ocr_provider ?? '—'}
-            description="Active OCR engine for text recognition"
-          />
+          <>
+            <SettingRow
+              label="Provider"
+              value={health?.ocr_provider ?? '—'}
+              description="Active OCR engine for text recognition"
+            />
+            <SettingRow
+              label="Configuration"
+              value={health?.ocr_configured ? 'Ready' : 'Not configured'}
+              description="OCR provider selection is validated without exposing local dependencies"
+              badge={health?.ocr_configured ? 'Ready' : 'Action needed'}
+            />
+            <SettingRow
+              label="PDF support"
+              value={health?.poppler_configured ? 'Configured' : 'PATH lookup'}
+              description="Poppler is used to convert PDF pages before OCR"
+            />
+          </>
         )}
       </SettingsSection>
 

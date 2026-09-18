@@ -458,3 +458,235 @@ While implementing each page, explain:
 
 Do not prioritize visual effects over usability.
 Prioritize a clean, trustworthy SaaS experience suitable for business users.
+
+
+
+
+
+
+6. You are joining this project as a Senior Software Engineer and Technical Architect.
+
+Before writing a single line of code, thoroughly analyze the entire repository and understand the current implementation.
+
+## Your responsibilities
+
+1. Analyze the complete project structure.
+2. Read the backend, frontend, tests, configuration files, and documentation.
+3. Infer the current architecture and design patterns.
+4. Identify completed features.
+5. Identify incomplete features.
+6. Detect TODOs, placeholders, mock implementations, and missing integrations.
+7. Explain your understanding before making any modifications.
+
+Do NOT regenerate existing code.
+Do NOT restructure the project unless absolutely necessary.
+Preserve the current architecture and coding style.
+
+---
+
+## Project Goal
+
+DocuMind AI is an AI-powered document intelligence platform.
+
+Current module:
+- Invoice Processing
+
+Future modules:
+- Resume Parser
+- Medical Report Analyzer
+- Bank Statement Analyzer
+- Legal Contract Analyzer
+- Purchase Order Reader
+- AI Chat with Documents
+
+The architecture should remain modular so new document processors can be added without major refactoring.
+
+---
+
+## Existing Architecture
+
+The project follows a layered architecture including:
+
+- FastAPI backend
+- React + TypeScript frontend
+- Provider abstraction
+- Repository pattern
+- Service layer
+- Dependency Injection
+- Validators
+- Prompt Manager
+- Structured Logging
+- Tests
+- OCR abstraction
+- LLM abstraction
+
+Do not break these abstractions.
+
+---
+
+## Required Workflow
+
+Phase 1:
+Only analyze.
+
+Provide:
+
+- High-level architecture summary
+- Folder structure summary
+- Backend status
+- Frontend status
+- Completed features
+- Missing features
+- Technical debt
+- Bugs you notice
+- Recommended next milestone
+
+Wait for my approval.
+
+DO NOT WRITE CODE.
+
+---
+
+Phase 2:
+After I approve the plan,
+
+implement ONLY ONE milestone at a time.
+
+Each milestone should be broken into small logical steps.
+
+After every step:
+
+- explain what changed
+- explain why
+- list modified files
+- mention any architectural impact
+
+---
+
+Coding Rules
+
+- Production-quality code only.
+- Type-safe code.
+- Follow SOLID principles.
+- Keep functions small.
+- Avoid duplicate logic.
+- Use existing services whenever possible.
+- Reuse components.
+- Never hardcode configuration.
+- Never expose secrets.
+- Preserve testability.
+- Update tests if functionality changes.
+
+---
+
+Git Workflow
+
+Treat every milestone as a separate commit.
+
+Do not implement multiple unrelated features in one change.
+
+---
+
+If you believe something should be refactored,
+explain WHY before doing it.
+
+Always prioritize extending the existing architecture over replacing it.
+
+Start by analyzing the repository only.
+Do not write code until I approve the implementation plan.
+
+
+
+
+7. Good analysis.
+
+Before implementing anything, I want you to verify your assumptions.
+
+Specifically:
+
+1. Confirm every "critical issue" by tracing the actual code paths instead of assuming based on filenames.
+
+2. Tell me which features are fully functional today if I run the application.
+
+3. Tell me which features are partially implemented.
+
+4. Tell me which features are placeholders.
+
+5. Identify exactly what prevents this project from being a fully working MVP.
+
+6. Ignore future enterprise features such as:
+   - authentication
+   - background workers
+   - multi-tenancy
+   - analytics
+   - deployment optimizations
+
+Our goal is to build a complete MVP first.
+
+Then answer only this question:
+
+"If you were the lead engineer, what single implementation would provide the biggest improvement to the user experience while keeping architectural risk low?"
+
+Do not write code yet.
+
+
+
+
+
+8. Excellent.
+
+I agree that the MVP appears to be functionally complete.
+
+However, before implementing new features, I want to validate the entire user journey.
+
+Your next task is NOT to add new functionality.
+
+Instead:
+
+1. Run through the complete application flow mentally from a user's perspective.
+
+2. Verify every page.
+
+3. Verify every API interaction.
+
+4. Verify every loading state.
+
+5. Verify every error state.
+
+6. Verify every navigation path.
+
+7. Verify that the frontend and backend integrate correctly.
+
+8. Identify any UX inconsistencies, runtime risks, missing wiring, or broken interactions.
+
+Focus on polish rather than new functionality.
+
+Ignore future enterprise features.
+
+Ignore authentication.
+
+Ignore deployment.
+
+Ignore scaling.
+
+The goal is a polished MVP.
+
+After your review, provide a checklist of improvements ordered by user impact.
+
+Do not implement anything yet.
+
+
+
+9. Verify whether ThemeProvider is actually missing.
+
+If it is:
+
+Explain why.
+
+Show the component tree.
+
+Identify the correct wrapping location.
+
+Wait for approval.
+
+Do not edit code.

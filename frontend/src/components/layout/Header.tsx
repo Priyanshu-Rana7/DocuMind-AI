@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
-import { Sun, Moon, Bell, Search, ChevronRight } from 'lucide-react';
+import { Sun, Moon, ChevronRight } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 
 const routeTitles: Record<string, { title: string; breadcrumb?: string }> = {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Link } from 'react-router-dom';
-import { Upload, History, Settings, Sparkles, FileSearch, LayoutDashboard, ChevronRight } from 'lucide-react';
+import { Upload, History, Settings, Sparkles, FileSearch, LayoutDashboard } from 'lucide-react';
 import clsx from 'clsx';
 
 interface NavItem {

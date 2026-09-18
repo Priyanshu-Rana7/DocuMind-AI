@@ -1,12 +1,19 @@
 import json
 import re
 from openai import AsyncOpenAI
+from pydantic import ValidationError
 from app.services.llm.base import BaseLLMProvider
-from app.services.llm.mock_llm import MockLLMProvider
 from app.schemas.invoice import ExtractedInvoiceData
 from app.core.config import settings
 from app.core.prompt_manager import prompt_manager
-from app.core.exceptions import AIExtractionError
+from app.core.exceptions import (
+    AIExtractionError,
+    AIResponseError,
+    LLMConfigurationError,
+    LLMProviderError,
+    LLMRateLimitError,
+    LLMTimeoutError,
+)
 from app.core.logging import logger
 
 
@@ -17,8 +24,6 @@ class OpenRouterLLMProvider(BaseLLMProvider):
         self.api_key = settings.OPENROUTER_API_KEY
         self.base_url = settings.OPENROUTER_BASE_URL
         self.model_name = settings.OPENROUTER_MODEL
-        self.fallback_mock = MockLLMProvider()
-
         if self.api_key:
             self.client = AsyncOpenAI(
                 api_key=self.api_key,
@@ -28,13 +33,15 @@ class OpenRouterLLMProvider(BaseLLMProvider):
         else:
             self.client = None
             logger.warning(
-                "OPENROUTER_API_KEY is not configured. OpenRouterLLMProvider will use MockLLMProvider fallback."
+                "OPENROUTER_API_KEY is not configured. OpenRouterLLMProvider is unavailable."
             )
 
     async def extract_structured_invoice(self, raw_ocr_text: str) -> ExtractedInvoiceData:
         if not self.client:
-            logger.info("Using MockLLMProvider fallback due to missing API key.")
-            return await self.fallback_mock.extract_structured_invoice(raw_ocr_text)
+            raise LLMConfigurationError(
+                "OPENROUTER_API_KEY is not configured. "
+                "Set a valid API key or use LLM_PROVIDER=mock explicitly for test data."
+            )
 
         prompt = prompt_manager.format_prompt(raw_ocr_text)
 
@@ -66,9 +73,27 @@ class OpenRouterLLMProvider(BaseLLMProvider):
 
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse LLM response as JSON: {str(e)}")
-            raise AIExtractionError(f"LLM returned invalid JSON output: {str(e)}")
+            raise AIResponseError(f"LLM returned invalid JSON output: {str(e)}")
+        except ValidationError as e:
+            logger.error(f"LLM response failed schema validation: {str(e)}")
+            raise AIResponseError(f"LLM response failed schema validation: {str(e)}")
         except Exception as e:
             logger.error(f"OpenRouter API call failed: {str(e)}", exc_info=True)
+            exception_name = type(e).__name__
+            status_code = getattr(e, "status_code", None)
+            if exception_name == "APITimeoutError" or isinstance(e, TimeoutError):
+                raise LLMTimeoutError(
+                    "The AI provider request timed out. Please retry the invoice."
+                )
+            if exception_name == "RateLimitError" or status_code == 429:
+                raise LLMRateLimitError(
+                    "The AI provider rate limit was reached. Please wait and retry."
+                )
+            if status_code is not None and status_code >= 400:
+                raise LLMProviderError(
+                    f"The AI provider returned HTTP {status_code}. "
+                    "Check the configured model and provider settings."
+                )
             raise AIExtractionError(f"AI Extraction failed: {str(e)}")
 
     @staticmethod

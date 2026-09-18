@@ -34,15 +34,23 @@ class Settings(BaseSettings):
     OCR_PROVIDER: str = "easyocr"  # easyocr | tesseract | mock
     OCR_LANGUAGES: List[str] = ["en"]
     OCR_USE_GPU: bool = False
+    POPPLER_PATH: Optional[str] = None
     
     # AI / LLM Settings
     LLM_PROVIDER: str = "openrouter"  # openrouter | openai | mock
     OPENROUTER_API_KEY: str = ""
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
-    OPENROUTER_MODEL: str = "anthropic/claude-3.5-sonnet"
+    OPENROUTER_MODEL: str = "google/gemini-2.5-flash"
     LLM_TEMPERATURE: float = 0.0
     LLM_MAX_TOKENS: int = 4000
     LLM_TIMEOUT_SECONDS: int = 60
+    EXTRACTION_MAX_ATTEMPTS: int = 3
+    EXTRACTION_RETRY_BACKOFF_SECONDS: float = 0.5
+    MAX_CONCURRENT_PROCESSING: int = 1
+    RATE_LIMIT_WINDOW_SECONDS: int = 60
+    RATE_LIMIT_MAX_REQUESTS: int = 10
+    RATE_LIMITED_PROCESSING_REQUESTS: int = 3
+    MAX_DOCUMENT_PAGES: int = 5
     
     # Storage Settings
     STORAGE_PROVIDER: str = "local"  # local | s3

@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, FileText, ChevronLeft, ChevronRight, Upload } from 'lucide-react';
-import { useInvoices } from '@/hooks/useInvoices';
+import { Search, FileText, ChevronLeft, ChevronRight, Upload, Trash2 } from 'lucide-react';
+import { useDeleteInvoice, useInvoices } from '@/hooks/useInvoices';
+import { useToast } from '@/context/ToastContext';
 import { StatusBadge } from '@/components/common/Badge';
 import { SkeletonTableRow } from '@/components/common/Skeleton';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -21,26 +22,29 @@ export const HistoryPage: React.FC = () => {
   const [search,    setSearch]    = useState('');
   const [statusFilter, setStatus] = useState<InvoiceStatus | ''>('');
   const [page,      setPage]      = useState(0);
+  const deleteInvoice = useDeleteInvoice();
+  const { toast } = useToast();
 
   const { data, isLoading, isError, refetch } = useInvoices({
     skip:   page * PAGE_SIZE,
     limit:  PAGE_SIZE,
     status: statusFilter || undefined,
+    search: search.trim() || undefined,
   });
 
   const invoices   = data?.items ?? [];
   const totalCount = data?.total ?? 0;
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
-  const filtered = useMemo(() => {
-    if (!search.trim()) return invoices;
-    const q = search.toLowerCase();
-    return invoices.filter(inv =>
-      inv.filename.toLowerCase().includes(q) ||
-      (inv.extracted_data?.vendor_name ?? '').toLowerCase().includes(q) ||
-      (inv.extracted_data?.invoice_number ?? '').toLowerCase().includes(q)
-    );
-  }, [invoices, search]);
+  const handleDelete = async (invoiceId: string, filename: string) => {
+    if (!window.confirm(`Permanently delete "${filename}" and its extracted data?`)) return;
+    try {
+      await deleteInvoice.mutateAsync(invoiceId);
+      toast.success('Invoice deleted', 'The source file and extracted data were removed.');
+    } catch (err) {
+      toast.error('Delete failed', err instanceof Error ? err.message : 'The invoice could not be deleted.');
+    }
+  };
 
   const fmtDate = (iso: string) =>
     new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -119,15 +123,16 @@ export const HistoryPage: React.FC = () => {
                     <th>Date</th>
                     <th>Status</th>
                     <th className="text-right">Total</th>
+                    <th className="w-12" aria-label="Actions"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {isLoading
                     ? Array.from({ length: 8 }).map((_, i) => <SkeletonTableRow key={i} cols={6} />)
-                    : filtered.length === 0
+                    : invoices.length === 0
                       ? (
                         <tr>
-                          <td colSpan={6} className="border-none">
+                          <td colSpan={7} className="border-none">
                             <EmptyState
                               icon={<FileText className="h-6 w-6" />}
                               title="No invoices found"
@@ -141,7 +146,7 @@ export const HistoryPage: React.FC = () => {
                           </td>
                         </tr>
                       )
-                      : filtered.map(inv => (
+                      : invoices.map(inv => (
                         <tr
                           key={inv.id}
                           onClick={() => navigate(`/invoices/${inv.id}`)}
@@ -173,6 +178,19 @@ export const HistoryPage: React.FC = () => {
                           <td><StatusBadge status={inv.status} /></td>
                           <td className="text-sm font-medium text-primary text-right whitespace-nowrap">
                             {fmtAmount(inv)}
+                          </td>
+                          <td className="text-right">
+                            <button
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                void handleDelete(inv.id, inv.filename);
+                              }}
+                              className="btn btn-ghost btn-sm p-1.5 text-red-600 hover:text-red-700"
+                              aria-label={`Delete ${inv.filename}`}
+                              disabled={deleteInvoice.isPending}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
                           </td>
                         </tr>
                       ))
