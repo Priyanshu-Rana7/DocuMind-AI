@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional, Any, Dict
 from pydantic import BaseModel, Field, ConfigDict
-from app.models.invoice import InvoiceStatus
+from app.models.invoice import InvoiceDirection, InvoiceStatus
 from app.schemas.ocr import OCRResult
 
 
@@ -13,6 +13,10 @@ class InvoiceItemSchema(BaseModel):
 
 
 class ExtractedInvoiceData(BaseModel):
+    direction: InvoiceDirection = Field(
+        default=InvoiceDirection.INCOMING,
+        description="Financial direction from the user's perspective: incoming payable or outgoing receivable",
+    )
     invoice_number: Optional[str] = Field(default=None, description="Invoice or reference number")
     vendor_name: Optional[str] = Field(default=None, description="Seller or Vendor Company Name")
     vendor_address: Optional[str] = Field(default=None, description="Vendor mailing or business address")

@@ -1,4 +1,5 @@
 export type InvoiceStatus = 'PENDING' | 'UPLOADED' | 'OCR_COMPLETED' | 'EXTRACTED' | 'FAILED';
+export type InvoiceDirection = 'INCOMING' | 'OUTGOING';
 
 export interface InvoiceItem {
   description: string;
@@ -8,6 +9,7 @@ export interface InvoiceItem {
 }
 
 export interface ExtractedInvoiceData {
+  direction: InvoiceDirection;
   invoice_number?: string;
   vendor_name?: string;
   vendor_address?: string;

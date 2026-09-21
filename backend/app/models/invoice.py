@@ -14,6 +14,11 @@ class InvoiceStatus(str, PyEnum):
     FAILED = "FAILED"
 
 
+class InvoiceDirection(str, PyEnum):
+    INCOMING = "INCOMING"
+    OUTGOING = "OUTGOING"
+
+
 def generate_uuid() -> str:
     return str(uuid.uuid4())
 

@@ -1,6 +1,7 @@
 import asyncio
 import re
 from app.services.llm.base import BaseLLMProvider
+from app.models.invoice import InvoiceDirection
 from app.schemas.invoice import ExtractedInvoiceData, InvoiceItemSchema
 
 
@@ -15,6 +16,7 @@ class MockLLMProvider(BaseLLMProvider):
         inv_num = inv_num_match.group(1) if inv_num_match else "INV-2026-0892"
 
         return ExtractedInvoiceData(
+            direction=InvoiceDirection.INCOMING,
             invoice_number=inv_num,
             vendor_name="Acme Cloud Tech Inc.",
             vendor_address="100 Innovation Way, San Francisco, CA 94105",

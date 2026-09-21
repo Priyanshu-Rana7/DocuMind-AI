@@ -431,6 +431,7 @@ export const InvoiceViewerPage: React.FC = () => {
                   ['vendor_address', 'Vendor address'],
                   ['customer_name', 'Customer'],
                   ['customer_address', 'Customer address'],
+                  ['direction', 'Direction'],
                   ['invoice_number', 'Invoice number'],
                   ['invoice_date', 'Invoice date'],
                   ['due_date', 'Due date'],
@@ -439,11 +440,22 @@ export const InvoiceViewerPage: React.FC = () => {
                 ] as const).map(([field, label]) => (
                   <label key={field} className="space-y-1">
                     <span className="text-xs font-semibold text-secondary">{label}</span>
-                    <input
-                      className="input w-full"
-                      value={draft[field] ?? ''}
-                      onChange={(event) => updateDraft(field, event.target.value)}
-                    />
+                    {field === 'direction' ? (
+                      <select
+                        className="input w-full"
+                        value={draft[field]}
+                        onChange={(event) => updateDraft(field, event.target.value as ExtractedInvoiceData['direction'])}
+                      >
+                        <option value="INCOMING">Incoming (payable)</option>
+                        <option value="OUTGOING">Outgoing (receivable)</option>
+                      </select>
+                    ) : (
+                      <input
+                        className="input w-full"
+                        value={draft[field] ?? ''}
+                        onChange={(event) => updateDraft(field, event.target.value)}
+                      />
+                    )}
                   </label>
                 ))}
               </div>
@@ -485,6 +497,7 @@ export const InvoiceViewerPage: React.FC = () => {
               <h2 className="text-xs font-semibold uppercase tracking-widest text-muted">Bill To</h2>
               <Field label="Customer" value={data.customer_name} icon={<User className="h-3.5 w-3.5" />} />
               <Field label="Address" value={data.customer_address} />
+              <Field label="Direction" value={data.direction === 'OUTGOING' ? 'Outgoing (receivable)' : 'Incoming (payable)'} />
               <Field label="Payment Terms" value={data.payment_terms} icon={<CreditCard className="h-3.5 w-3.5" />} />
             </div>
           </div>

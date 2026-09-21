@@ -1,5 +1,6 @@
 import pytest
 from app.schemas.invoice import ExtractedInvoiceData, InvoiceItemSchema
+from app.models.invoice import InvoiceDirection
 from app.services.llm.openrouter import OpenRouterLLMProvider
 from app.core.exceptions import (
     AIResponseError,
@@ -25,6 +26,7 @@ def test_extracted_invoice_schema_validation():
     assert len(data.invoice_items) == 1
     assert data.total == 1250.00
     assert data.customer_address == "10 Main Street, London"
+    assert data.direction is InvoiceDirection.INCOMING
 
 
 def test_openrouter_normalizes_missing_amounts_with_warnings():
