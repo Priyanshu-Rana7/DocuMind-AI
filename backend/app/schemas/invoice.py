@@ -17,6 +17,7 @@ class ExtractedInvoiceData(BaseModel):
     vendor_name: Optional[str] = Field(default=None, description="Seller or Vendor Company Name")
     vendor_address: Optional[str] = Field(default=None, description="Vendor mailing or business address")
     customer_name: Optional[str] = Field(default=None, description="Buyer or Client Name")
+    customer_address: Optional[str] = Field(default=None, description="Customer mailing or billing address")
     invoice_date: Optional[str] = Field(default=None, description="Date invoice was issued (YYYY-MM-DD format if possible)")
     due_date: Optional[str] = Field(default=None, description="Invoice payment due date")
     currency: str = Field(default="USD", description="Currency symbol or 3-letter code e.g. USD, EUR, INR")

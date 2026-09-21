@@ -13,6 +13,7 @@ def test_extracted_invoice_schema_validation():
     data = ExtractedInvoiceData(
         invoice_number="INV-2026-001",
         vendor_name="Acme Cloud Solutions",
+        customer_address="10 Main Street, London",
         total=1250.00,
         currency="USD",
         invoice_items=[
@@ -23,6 +24,7 @@ def test_extracted_invoice_schema_validation():
     assert data.invoice_number == "INV-2026-001"
     assert len(data.invoice_items) == 1
     assert data.total == 1250.00
+    assert data.customer_address == "10 Main Street, London"
 
 
 def test_openrouter_normalizes_missing_amounts_with_warnings():

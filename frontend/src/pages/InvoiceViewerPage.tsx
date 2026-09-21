@@ -430,6 +430,7 @@ export const InvoiceViewerPage: React.FC = () => {
                   ['vendor_name', 'Vendor'],
                   ['vendor_address', 'Vendor address'],
                   ['customer_name', 'Customer'],
+                  ['customer_address', 'Customer address'],
                   ['invoice_number', 'Invoice number'],
                   ['invoice_date', 'Invoice date'],
                   ['due_date', 'Due date'],
@@ -483,6 +484,7 @@ export const InvoiceViewerPage: React.FC = () => {
             <div className="space-y-4">
               <h2 className="text-xs font-semibold uppercase tracking-widest text-muted">Bill To</h2>
               <Field label="Customer" value={data.customer_name} icon={<User className="h-3.5 w-3.5" />} />
+              <Field label="Address" value={data.customer_address} />
               <Field label="Payment Terms" value={data.payment_terms} icon={<CreditCard className="h-3.5 w-3.5" />} />
             </div>
           </div>

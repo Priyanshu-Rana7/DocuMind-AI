@@ -18,6 +18,7 @@ JSON OUTPUT STRUCTURE:
   "vendor_name": "string or null",
   "vendor_address": "string or null",
   "customer_name": "string or null",
+  "customer_address": "string or null",
   "invoice_date": "YYYY-MM-DD or null",
   "due_date": "YYYY-MM-DD or null",
   "currency": "USD / EUR / INR etc.",

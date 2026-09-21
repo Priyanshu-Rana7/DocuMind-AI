@@ -19,6 +19,7 @@ class MockLLMProvider(BaseLLMProvider):
             vendor_name="Acme Cloud Tech Inc.",
             vendor_address="100 Innovation Way, San Francisco, CA 94105",
             customer_name="Global Enterprises LLC",
+            customer_address="500 Market Street, New York, NY 10001",
             invoice_date="2026-07-15",
             due_date="2026-08-15",
             currency="USD",

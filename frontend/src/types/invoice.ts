@@ -12,6 +12,7 @@ export interface ExtractedInvoiceData {
   vendor_name?: string;
   vendor_address?: string;
   customer_name?: string;
+  customer_address?: string;
   invoice_date?: string;
   due_date?: string;
   currency: string;
