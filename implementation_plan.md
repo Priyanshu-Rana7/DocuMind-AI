@@ -221,3 +221,13 @@ d:/Files and Docs/B.Tech/Projects/AI-Invoice-Reader/
 - [x] Improve deployment configuration
 
 - [x] Update project documentation
+
+
+
+
+
+
+#### Further updates:
+- [x] Add the receiver's/customer address to extraction, correction, API, and invoice review.
+- [x] Persist a clear incoming/outgoing invoice direction and allow manual correction.
+- [x] Replace overview invoice details with aggregate financial cards and status distribution charts.

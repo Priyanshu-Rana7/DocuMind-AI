@@ -1,213 +1,127 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Clock, CheckCircle2, AlertCircle, ArrowRight, TrendingUp, Zap, Shield } from 'lucide-react';
+import { AlertCircle, ArrowUpRight, CheckCircle2, FileText, TrendingDown, TrendingUp } from 'lucide-react';
 import { useInvoices } from '@/hooks/useInvoices';
-import { StatusBadge } from '@/components/common/Badge';
 import { SkeletonCard } from '@/components/common/Skeleton';
-import { EmptyState } from '@/components/common/EmptyState';
-import { Invoice } from '@/types/invoice';
 
-/* ─── Stat Card ───────────────────────────────────────────── */
+const formatAmount = (amount: number) =>
+  amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
 interface StatCardProps {
   label: string;
-  value: number | string;
+  value: string | number;
   icon: React.ReactNode;
-  trend?: string;
-  colorClass?: string;
+  colorClass: string;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ label, value, icon, trend, colorClass = 'text-brand-500' }) => (
+const StatCard: React.FC<StatCardProps> = ({ label, value, icon, colorClass }) => (
   <div className="card p-5">
-    <div className="flex items-start justify-between mb-3">
-      <div className={`flex items-center justify-center w-9 h-9 rounded-lg bg-[var(--color-bg-muted)] ${colorClass}`}>
-        {icon}
-      </div>
-      {trend && (
-        <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-0.5">
-          <TrendingUp className="h-3 w-3" /> {trend}
-        </span>
-      )}
+    <div className={`mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--color-bg-muted)] ${colorClass}`}>
+      {icon}
     </div>
-    <p className="text-2xl font-bold text-primary tabular-nums">{value}</p>
-    <p className="text-xs text-secondary mt-1">{label}</p>
+    <p className="text-2xl font-bold tabular-nums text-primary">{value}</p>
+    <p className="mt-1 text-xs text-secondary">{label}</p>
   </div>
 );
 
-/* ─── Recent Invoice Row ─────────────────────────────────── */
-const RecentRow: React.FC<{ invoice: Invoice; onClick: () => void }> = ({ invoice, onClick }) => {
-  const date = new Date(invoice.created_at).toLocaleDateString('en-US', {
-    month: 'short', day: 'numeric', year: 'numeric',
-  });
-  const total = invoice.extracted_data?.total;
+const DistributionBar: React.FC<{ label: string; value: number; total: number; color: string }> = ({
+  label, value, total, color,
+}) => (
+  <div className="space-y-1.5">
+    <div className="flex justify-between text-xs">
+      <span className="text-secondary">{label}</span>
+      <span className="font-medium text-primary">{value}</span>
+    </div>
+    <div className="h-2 rounded-full bg-[var(--color-bg-muted)]">
+      <div className={`h-2 rounded-full ${color}`} style={{ width: `${total ? Math.max((value / total) * 100, 2) : 0}%` }} />
+    </div>
+  </div>
+);
 
-  return (
-    <tr
-      onClick={onClick}
-      className="cursor-pointer"
-      role="row"
-      tabIndex={0}
-      onKeyDown={e => e.key === 'Enter' && onClick()}
-      aria-label={`View invoice ${invoice.filename}`}
-    >
-      <td className="px-4 py-3.5 border-b border-[var(--color-border)]">
-        <div className="flex items-center gap-2.5">
-          <div className="flex items-center justify-center w-7 h-7 rounded-md bg-[var(--color-bg-muted)] flex-shrink-0">
-            <FileText className="h-3.5 w-3.5 text-secondary" />
-          </div>
-          <span className="text-sm font-medium text-primary truncate-text max-w-[200px]">
-            {invoice.filename}
-          </span>
-        </div>
-      </td>
-      <td className="px-4 py-3.5 border-b border-[var(--color-border)] text-sm text-secondary">
-        {invoice.extracted_data?.vendor_name ?? <span className="text-muted">—</span>}
-      </td>
-      <td className="px-4 py-3.5 border-b border-[var(--color-border)] text-sm text-secondary whitespace-nowrap">
-        {date}
-      </td>
-      <td className="px-4 py-3.5 border-b border-[var(--color-border)]">
-        <StatusBadge status={invoice.status} />
-      </td>
-      <td className="px-4 py-3.5 border-b border-[var(--color-border)] text-sm font-medium text-primary text-right whitespace-nowrap">
-        {total != null
-          ? `${invoice.extracted_data?.currency ?? 'USD'} ${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
-          : <span className="text-muted">—</span>}
-      </td>
-    </tr>
-  );
-};
-
-/* ─── Landing/Overview Page ──────────────────────────────── */
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
-  const { data, isLoading } = useInvoices({ limit: 5 });
-
+  const { data, isLoading } = useInvoices({ limit: 100 });
   const invoices = data?.items ?? [];
-  const total    = data?.total ?? 0;
-
-  const extracted = invoices.filter(i => i.status === 'EXTRACTED').length;
-  const failed    = invoices.filter(i => i.status === 'FAILED').length;
+  const extracted = invoices.filter(invoice => invoice.status === 'EXTRACTED');
+  const incoming = extracted.filter(invoice => invoice.extracted_data?.direction !== 'OUTGOING');
+  const outgoing = extracted.filter(invoice => invoice.extracted_data?.direction === 'OUTGOING');
+  const incomingTotal = incoming.reduce((sum, invoice) => sum + (invoice.extracted_data?.total ?? 0), 0);
+  const outgoingTotal = outgoing.reduce((sum, invoice) => sum + (invoice.extracted_data?.total ?? 0), 0);
+  const processing = invoices.filter(invoice => ['PENDING', 'UPLOADED', 'OCR_COMPLETED'].includes(invoice.status)).length;
+  const failed = invoices.filter(invoice => invoice.status === 'FAILED').length;
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="animate-fade-in space-y-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-bold text-primary">Overview</h1>
-          <p className="text-sm text-secondary mt-0.5">
-            Welcome back — your AI-powered invoice intelligence hub.
-          </p>
+          <p className="mt-0.5 text-sm text-secondary">A financial snapshot of your processed invoices.</p>
         </div>
-        <button
-          onClick={() => navigate('/upload')}
-          className="btn btn-primary"
-          aria-label="Upload a new invoice"
-        >
-          <FileText className="h-4 w-4" />
-          New Invoice
+        <button onClick={() => navigate('/upload')} className="btn btn-primary">
+          <FileText className="h-4 w-4" /> New Invoice
         </button>
       </div>
 
-      {/* Stats Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          label="Total Processed"
-          value={isLoading ? '—' : total}
-          icon={<FileText className="h-4.5 w-4.5" />}
-          colorClass="text-brand-500"
-        />
-        <StatCard
-          label="Extracted Successfully"
-          value={isLoading ? '—' : extracted}
-          icon={<CheckCircle2 className="h-4.5 w-4.5" />}
-          colorClass="text-emerald-500"
-        />
-        <StatCard
-          label="Processing"
-          value={isLoading ? '—' : invoices.filter(i => i.status === 'OCR_COMPLETED').length}
-          icon={<Clock className="h-4.5 w-4.5" />}
-          colorClass="text-amber-500"
-        />
-        <StatCard
-          label="Failed"
-          value={isLoading ? '—' : failed}
-          icon={<AlertCircle className="h-4.5 w-4.5" />}
-          colorClass="text-red-500"
-        />
-      </div>
+      {isLoading ? (
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">{[1, 2, 3, 4].map(item => <SkeletonCard key={item} />)}</div>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <StatCard label="Total Invoices" value={data?.total ?? 0} icon={<FileText className="h-4 w-4" />} colorClass="text-brand-500" />
+            <StatCard label="Incoming Total" value={formatAmount(incomingTotal)} icon={<TrendingDown className="h-4 w-4" />} colorClass="text-amber-500" />
+            <StatCard label="Outgoing Total" value={formatAmount(outgoingTotal)} icon={<TrendingUp className="h-4 w-4" />} colorClass="text-emerald-500" />
+            <StatCard label="Successfully Extracted" value={extracted.length} icon={<CheckCircle2 className="h-4 w-4" />} colorClass="text-blue-500" />
+          </div>
 
-      {/* Feature Highlights — useful until first invoice */}
-      {total === 0 && !isLoading && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[
-            { icon: <Zap className="h-5 w-5" />, title: 'OCR Text Extraction', desc: 'Multi-page PDFs and scanned images processed with high accuracy.', color: 'text-brand-500' },
-            { icon: <CheckCircle2 className="h-5 w-5" />, title: 'AI-Structured Output', desc: 'Vendor, customer, line items, totals, and payment terms — extracted automatically.', color: 'text-emerald-500' },
-            { icon: <Shield className="h-5 w-5" />, title: 'Export Ready', desc: 'Download extracted data as CSV, Excel, or raw JSON instantly.', color: 'text-amber-500' },
-          ].map(f => (
-            <div key={f.title} className="card p-5 space-y-2.5">
-              <div className={`${f.color} bg-[var(--color-bg-muted)] w-9 h-9 rounded-lg flex items-center justify-center`}>
-                {f.icon}
+          <div className="grid gap-5 lg:grid-cols-2">
+            <section className="card space-y-5 p-5">
+              <div>
+                <h2 className="text-sm font-semibold text-primary">Financial direction</h2>
+                <p className="mt-1 text-xs text-secondary">Totals from extracted invoices (displayed in source currencies).</p>
               </div>
-              <h3 className="text-sm font-semibold text-primary">{f.title}</h3>
-              <p className="text-xs text-secondary leading-relaxed">{f.desc}</p>
-            </div>
-          ))}
-        </div>
-      )}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-lg bg-[var(--color-bg-muted)] p-4">
+                  <p className="text-xs text-secondary">Incoming · payable</p>
+                  <p className="mt-2 text-lg font-bold text-primary">{formatAmount(incomingTotal)}</p>
+                  <p className="mt-1 text-xs text-muted">{incoming.length} invoices</p>
+                </div>
+                <div className="rounded-lg bg-[var(--color-bg-muted)] p-4">
+                  <p className="text-xs text-secondary">Outgoing · receivable</p>
+                  <p className="mt-2 text-lg font-bold text-primary">{formatAmount(outgoingTotal)}</p>
+                  <p className="mt-1 text-xs text-muted">{outgoing.length} invoices</p>
+                </div>
+              </div>
+            </section>
+            <section className="card space-y-4 p-5">
+              <div>
+                <h2 className="text-sm font-semibold text-primary">Processing distribution</h2>
+                <p className="mt-1 text-xs text-secondary">Current lifecycle status across available invoices.</p>
+              </div>
+              <DistributionBar label="Extracted" value={extracted.length} total={invoices.length} color="bg-emerald-500" />
+              <DistributionBar label="Processing" value={processing} total={invoices.length} color="bg-amber-500" />
+              <DistributionBar label="Failed" value={failed} total={invoices.length} color="bg-red-500" />
+            </section>
+          </div>
 
-      {/* Recent Invoices Table */}
-      <div className="card overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-border)]">
-          <h2 className="text-sm font-semibold text-primary">Recent Invoices</h2>
-          {total > 5 && (
-            <button
-              onClick={() => navigate('/history')}
-              className="btn btn-ghost btn-sm flex items-center gap-1 text-brand-500"
-            >
-              View all <ArrowRight className="h-3.5 w-3.5" />
+          {invoices.length === 0 && (
+            <div className="card p-8 text-center">
+              <FileText className="mx-auto h-8 w-8 text-muted" />
+              <h2 className="mt-3 text-sm font-semibold text-primary">No invoices yet</h2>
+              <p className="mt-1 text-xs text-secondary">Upload an invoice to populate your financial overview.</p>
+              <button onClick={() => navigate('/upload')} className="btn btn-primary btn-sm mt-4">Upload Invoice</button>
+            </div>
+          )}
+
+          {(processing > 0 || failed > 0) && (
+            <button onClick={() => navigate('/history')} className="card flex w-full items-center justify-between p-4 text-left hover:border-brand-500">
+              <span className="flex items-center gap-2 text-sm text-secondary">
+                <AlertCircle className="h-4 w-4 text-amber-500" /> Review {processing + failed} invoice{processing + failed === 1 ? '' : 's'} needing attention
+              </span>
+              <ArrowUpRight className="h-4 w-4 text-brand-500" />
             </button>
           )}
-        </div>
-        {isLoading ? (
-          <div className="p-5 grid gap-3">
-            {[0, 1, 2].map(i => <SkeletonCard key={i} />)}
-          </div>
-        ) : invoices.length === 0 ? (
-          <EmptyState
-            icon={<FileText className="h-6 w-6" />}
-            title="No invoices yet"
-            description="Upload your first invoice to get started with AI-powered extraction."
-            action={
-              <button onClick={() => navigate('/upload')} className="btn btn-primary btn-sm">
-                Upload Invoice
-              </button>
-            }
-          />
-        ) : (
-          <div className="table-wrapper">
-            <table className="data-table" role="table" aria-label="Recent invoices">
-              <thead>
-                <tr role="row">
-                  <th role="columnheader">Document</th>
-                  <th role="columnheader">Vendor</th>
-                  <th role="columnheader">Date</th>
-                  <th role="columnheader">Status</th>
-                  <th role="columnheader" className="text-right">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {invoices.map(inv => (
-                  <RecentRow
-                    key={inv.id}
-                    invoice={inv}
-                    onClick={() => navigate(`/invoices/${inv.id}`)}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 };
