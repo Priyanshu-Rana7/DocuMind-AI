@@ -66,6 +66,7 @@ class OpenRouterLLMProvider(BaseLLMProvider):
 
             cleaned_json_str = self._clean_json_markdown(raw_response_content)
             parsed_dict = json.loads(cleaned_json_str)
+            parsed_dict = self._normalize_nullable_amounts(parsed_dict)
 
             # Validate against Pydantic schema
             extracted_data = ExtractedInvoiceData(**parsed_dict)
@@ -95,6 +96,41 @@ class OpenRouterLLMProvider(BaseLLMProvider):
                     "Check the configured model and provider settings."
                 )
             raise AIExtractionError(f"AI Extraction failed: {str(e)}")
+
+    @staticmethod
+    def _normalize_nullable_amounts(payload: dict) -> dict:
+        """Convert unreadable numeric fields to explicit zero values with warnings."""
+        normalized = dict(payload)
+        warnings = list(normalized.get("validation_warnings") or [])
+
+        for field in ("subtotal", "tax", "discount", "total"):
+            if normalized.get(field) is None:
+                normalized[field] = 0.0
+                warnings.append(
+                    f"{field.capitalize()} was not provided by the AI response."
+                )
+
+        items = normalized.get("invoice_items")
+        if isinstance(items, list):
+            normalized_items = []
+            for item in items:
+                if not isinstance(item, dict):
+                    normalized_items.append(item)
+                    continue
+                normalized_item = dict(item)
+                for field in ("quantity", "unit_price", "total"):
+                    if normalized_item.get(field) is None:
+                        normalized_item[field] = 0.0
+                        warnings.append(
+                            f"Line item {field.replace('_', ' ')} was not provided "
+                            "by the AI response."
+                        )
+                normalized_items.append(normalized_item)
+            normalized["invoice_items"] = normalized_items
+
+        if warnings:
+            normalized["validation_warnings"] = warnings
+        return normalized
 
     @staticmethod
     def _clean_json_markdown(content: str) -> str:

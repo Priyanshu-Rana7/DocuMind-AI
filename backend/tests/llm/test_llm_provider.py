@@ -25,6 +25,24 @@ def test_extracted_invoice_schema_validation():
     assert data.total == 1250.00
 
 
+def test_openrouter_normalizes_missing_amounts_with_warnings():
+    normalized = OpenRouterLLMProvider._normalize_nullable_amounts(
+        {
+            "total": None,
+            "invoice_items": [
+                {"description": "Service", "quantity": 1, "unit_price": None, "total": None}
+            ],
+        }
+    )
+
+    data = ExtractedInvoiceData(**normalized)
+
+    assert data.total == 0.0
+    assert data.invoice_items[0].unit_price == 0.0
+    assert data.invoice_items[0].total == 0.0
+    assert "Total was not provided by the AI response." in data.validation_warnings
+
+
 @pytest.mark.asyncio
 async def test_openrouter_does_not_fallback_to_mock_without_api_key(monkeypatch):
     monkeypatch.setattr("app.services.llm.openrouter.settings.OPENROUTER_API_KEY", "")
