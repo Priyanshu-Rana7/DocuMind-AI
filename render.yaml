@@ -25,6 +25,12 @@ services:
       - key: OCR_PROVIDER
         value: tesseract
       - key: STORAGE_PROVIDER
-        value: local
+        value: supabase
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_STORAGE_BUCKET
+        value: invoices
       - key: WEB_CONCURRENCY
         value: "1"

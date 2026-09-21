@@ -18,6 +18,10 @@ class BaseStorageProvider(ABC):
         """Returns the local file path or presigned URL for access."""
         pass
 
+    async def release_file_path(self, file_path: str) -> None:
+        """Releases any temporary local materialization created for a remote file."""
+        return None
+
     @abstractmethod
     async def delete_file(self, relative_path: str) -> bool:
         """Deletes file from storage target."""

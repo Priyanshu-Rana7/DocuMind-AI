@@ -45,4 +45,8 @@ def health_check(db: Session = Depends(get_db)):
         "llm_model": settings.OPENROUTER_MODEL,
         "llm_configured": llm_configured,
         "storage_provider": settings.STORAGE_PROVIDER,
+        "storage_configured": (
+            settings.STORAGE_PROVIDER == "local"
+            or bool(settings.SUPABASE_URL and settings.SUPABASE_SERVICE_ROLE_KEY)
+        ),
     }

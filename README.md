@@ -182,7 +182,18 @@ For Vercel:
 
 Do not expose `OPENROUTER_API_KEY` or database credentials in Vercel variables or `VITE_*` variables.
 
-The default Render filesystem is ephemeral. The current MVP uses local storage, so a free showcase deployment may lose uploaded source files after a restart or redeploy. Treat storage as demo-grade until an S3-compatible storage provider is configured.
+Render's default filesystem is ephemeral. The Render showcase configuration uses a private Supabase Storage bucket so uploaded source files persist across restarts and redeploys. Local storage remains available for development.
+
+For Render, configure these backend-only variables:
+
+```env
+STORAGE_PROVIDER=supabase
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=<server-only-secret>
+SUPABASE_STORAGE_BUCKET=invoices
+```
+
+Keep the bucket private and never expose `SUPABASE_SERVICE_ROLE_KEY` to Vercel or the browser.
 
 Free Render instances can sleep and EasyOCR can take time to initialize. The first request after inactivity may be slow.
 

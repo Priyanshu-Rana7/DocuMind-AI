@@ -18,6 +18,9 @@ def get_storage_provider() -> BaseStorageProvider:
     if settings.STORAGE_PROVIDER == "local":
         from app.services.storage.local_storage import LocalStorageProvider
         return LocalStorageProvider()
+    elif settings.STORAGE_PROVIDER == "supabase":
+        from app.services.storage.supabase_storage import SupabaseStorageProvider
+        return SupabaseStorageProvider()
     else:
         raise NotImplementedError(f"Storage provider '{settings.STORAGE_PROVIDER}' is not implemented.")
 

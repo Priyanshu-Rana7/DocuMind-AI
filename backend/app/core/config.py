@@ -54,7 +54,7 @@ class Settings(BaseSettings):
     MAX_DOCUMENT_PAGES: int = 5
     
     # Storage Settings
-    STORAGE_PROVIDER: str = "local"  # local | s3
+    STORAGE_PROVIDER: str = "local"  # local | supabase
     UPLOAD_DIR: str = os.path.join(
         os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "uploads"
     )
@@ -67,7 +67,12 @@ class Settings(BaseSettings):
         "image/jpg",
     ]
 
-    # Future S3 Configuration
+    # Supabase Storage
+    SUPABASE_URL: Optional[str] = None
+    SUPABASE_SERVICE_ROLE_KEY: Optional[str] = None
+    SUPABASE_STORAGE_BUCKET: str = "invoices"
+
+    # Legacy S3 configuration
     S3_BUCKET_NAME: Optional[str] = None
     AWS_ACCESS_KEY_ID: Optional[str] = None
     AWS_SECRET_ACCESS_KEY: Optional[str] = None

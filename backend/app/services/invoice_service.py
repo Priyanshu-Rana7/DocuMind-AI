@@ -67,6 +67,7 @@ class InvoiceService:
         Updates database record at each lifecycle stage and records timing metrics.
         """
         invoice = self.repo.get_by_id(invoice_id)
+        full_file_path = None
         full_file_path = await self.storage.get_file_path(invoice.file_path)
 
         ocr_metrics: Dict[str, Any] = {"invoice_id": invoice_id, "file_path": full_file_path}
@@ -90,6 +91,9 @@ class InvoiceService:
             logger.error(f"Invoice pipeline processing failed for ID '{invoice_id}': {str(e)}")
             self.repo.mark_failed(invoice_id, str(e))
             raise
+        finally:
+            if full_file_path is not None:
+                await self.storage.release_file_path(full_file_path)
 
     async def _extract_invoice_with_limit(
         self,
