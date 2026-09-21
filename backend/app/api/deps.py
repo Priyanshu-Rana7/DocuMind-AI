@@ -27,6 +27,9 @@ def get_ocr_provider() -> BaseOCRProvider:
     if settings.OCR_PROVIDER == "easyocr":
         from app.services.ocr.easy_ocr import EasyOCRProvider
         return EasyOCRProvider()
+    elif settings.OCR_PROVIDER == "tesseract":
+        from app.services.ocr.tesseract_ocr import TesseractOCRProvider
+        return TesseractOCRProvider()
     elif settings.OCR_PROVIDER == "mock":
         from app.services.ocr.mock_ocr import MockOCRProvider
         return MockOCRProvider()

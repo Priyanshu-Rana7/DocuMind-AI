@@ -170,7 +170,8 @@ The repository includes [render.yaml](./render.yaml) as a starting point for a R
 - `DATABASE_URL` to the managed PostgreSQL connection string.
 - `OPENROUTER_API_KEY` to the backend-only OpenRouter key.
 - `CORS_ORIGINS` to a JSON array containing the Vercel deployment origin.
-- `OCR_PROVIDER=easyocr`.
+- `OCR_PROVIDER=tesseract` is recommended for the free Render showcase instance.
+- `OCR_PROVIDER=easyocr` remains available for local environments with sufficient memory.
 - `WEB_CONCURRENCY=1` for the free instance.
 
 For Vercel:

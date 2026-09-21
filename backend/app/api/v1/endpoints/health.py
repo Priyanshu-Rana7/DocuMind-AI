@@ -29,7 +29,7 @@ def health_check(db: Session = Depends(get_db)):
         settings.LLM_PROVIDER == "mock"
         or bool(settings.OPENROUTER_API_KEY)
     )
-    ocr_configured = settings.OCR_PROVIDER == "mock" or settings.OCR_PROVIDER == "easyocr"
+    ocr_configured = settings.OCR_PROVIDER in {"mock", "easyocr", "tesseract"}
 
     return {
         "status": "ok",

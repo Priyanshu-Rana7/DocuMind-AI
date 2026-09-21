@@ -23,7 +23,7 @@ services:
       - key: LLM_PROVIDER
         value: openrouter
       - key: OCR_PROVIDER
-        value: easyocr
+        value: tesseract
       - key: STORAGE_PROVIDER
         value: local
       - key: WEB_CONCURRENCY
